@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+ name: sidecar
+ labels:
+  app: time
+ namespace: sre-engineers
+spec:
+ volumes:
+  - name: logs
+    emptyDir: {}
+
+ containers:
+  - name: time-exporter
+    image: alpine:latest
+    imagePullPolicy: IfNotPresent
+    command: ["/bin/sh"]
+    args: ["-c", "while true ; do date > /var/log/index.html; sleep 1 ; done"]
+    volumeMounts:
+      - name: logs
+        mountPath: /var/log
+
+  - name: nginx
+    image: docker.io/nginx:latest
+    imagePullPolicy: IfNotPresent
+    ports:
+     - containerPort: 80
+    volumeMounts:
+      - name: logs
+        mountPath: /usr/share/nginx/html
+    resources:
+       limits:
+          cpu: "70m"
+       requests:
+          cpu: "50m"
